@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 )
 
+var userHomeDir = os.UserHomeDir
+
 type Config struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
@@ -26,7 +28,7 @@ func (c Config) BaseURL() string {
 }
 
 func configPath() string {
-	home, err := os.UserHomeDir()
+	home, err := userHomeDir()
 	if err != nil {
 		return ""
 	}
@@ -70,11 +72,7 @@ func Save(cfg Config) error {
 		return fmt.Errorf("create config dir: %w", err)
 	}
 
-	data, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal config: %w", err)
-	}
-
+	data, _ := json.MarshalIndent(cfg, "", "  ")
 	return os.WriteFile(path, data, 0644)
 }
 

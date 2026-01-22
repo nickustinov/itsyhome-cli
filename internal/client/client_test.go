@@ -2,12 +2,24 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/nickustinov/itsyhome-cli/internal/config"
 )
+
+type errorReader struct{}
+
+func (e errorReader) Read([]byte) (int, error) { return 0, fmt.Errorf("read error") }
+func (e errorReader) Close() error             { return nil }
+
+type errorTransport struct{ resp *http.Response }
+
+func (t *errorTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return t.resp, nil
+}
 
 func testServer(handler http.HandlerFunc) (*httptest.Server, *Client) {
 	srv := httptest.NewServer(handler)
@@ -51,6 +63,18 @@ func TestDoActionError(t *testing.T) {
 	}
 }
 
+func TestDoActionInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.DoAction("/toggle/Lamp")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
 func TestGetStatus(t *testing.T) {
 	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/status" {
@@ -75,6 +99,18 @@ func TestGetStatus(t *testing.T) {
 	}
 }
 
+func TestGetStatusInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.GetStatus()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
 func TestListRooms(t *testing.T) {
 	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/list/rooms" {
@@ -93,6 +129,18 @@ func TestListRooms(t *testing.T) {
 	}
 	if rooms[0].Name != "Office" {
 		t.Errorf("expected Office, got %s", rooms[0].Name)
+	}
+}
+
+func TestListRoomsInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.ListRooms()
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
@@ -134,6 +182,18 @@ func TestListDevicesWithRoom(t *testing.T) {
 	}
 }
 
+func TestListDevicesInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.ListDevices("")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
 func TestListScenes(t *testing.T) {
 	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]Scene{{Name: "Goodnight"}, {Name: "Morning"}})
@@ -146,6 +206,18 @@ func TestListScenes(t *testing.T) {
 	}
 	if len(scenes) != 2 {
 		t.Fatalf("expected 2 scenes, got %d", len(scenes))
+	}
+}
+
+func TestListScenesInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.ListScenes()
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
@@ -166,6 +238,18 @@ func TestListGroups(t *testing.T) {
 	}
 	if groups[0].Devices != 5 {
 		t.Errorf("expected 5 devices, got %d", groups[0].Devices)
+	}
+}
+
+func TestListGroupsInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json"))
+	})
+	defer srv.Close()
+
+	_, err := c.ListGroups()
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
@@ -226,6 +310,18 @@ func TestGetInfoError(t *testing.T) {
 	}
 }
 
+func TestGetInfoInvalidJSON(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("not json at all {{{"))
+	})
+	defer srv.Close()
+
+	_, err := c.GetInfo("Lamp")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
 func TestHTTP403(t *testing.T) {
 	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
@@ -267,6 +363,9 @@ func TestHTTP500NoBody(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for 500")
 	}
+	if err.Error() != "server error: 500" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
 }
 
 func TestNewClient(t *testing.T) {
@@ -283,5 +382,84 @@ func TestConnectionRefused(t *testing.T) {
 	_, err := c.GetStatus()
 	if err == nil {
 		t.Fatal("expected connection error")
+	}
+}
+
+func TestDoActionGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.DoAction("/toggle/Lamp")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestListRoomsGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.ListRooms()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestListDevicesGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.ListDevices("")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestListScenesGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.ListScenes()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestListGroupsGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.ListGroups()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestGetInfoGetError(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {})
+	srv.Close()
+
+	_, err := c.GetInfo("Lamp")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestGetReadBodyError(t *testing.T) {
+	c := &Client{
+		baseURL: "http://localhost",
+		httpClient: &http.Client{
+			Transport: &errorTransport{
+				resp: &http.Response{
+					StatusCode: 200,
+					Body:       errorReader{},
+				},
+			},
+		},
+	}
+
+	_, err := c.get("/test")
+	if err == nil {
+		t.Fatal("expected read error")
 	}
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,11 +34,8 @@ func TestBaseURLDefault(t *testing.T) {
 }
 
 func TestLoadMissingFile(t *testing.T) {
-	// Override config path to a non-existent file
-	original := os.Getenv("HOME")
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
-	defer os.Setenv("HOME", original)
 
 	cfg := Load()
 	if cfg.Host != "localhost" || cfg.Port != 8423 {
@@ -101,5 +99,56 @@ func TestPath(t *testing.T) {
 	}
 	if filepath.Base(p) != "config.json" {
 		t.Errorf("expected config.json, got %s", filepath.Base(p))
+	}
+}
+
+func TestConfigPathNoHome(t *testing.T) {
+	original := userHomeDir
+	userHomeDir = func() (string, error) { return "", fmt.Errorf("no home") }
+	defer func() { userHomeDir = original }()
+
+	p := configPath()
+	if p != "" {
+		t.Errorf("expected empty path, got %s", p)
+	}
+}
+
+func TestLoadNoHome(t *testing.T) {
+	original := userHomeDir
+	userHomeDir = func() (string, error) { return "", fmt.Errorf("no home") }
+	defer func() { userHomeDir = original }()
+
+	cfg := Load()
+	if cfg.Host != "localhost" || cfg.Port != 8423 {
+		t.Errorf("expected defaults, got host=%s port=%d", cfg.Host, cfg.Port)
+	}
+}
+
+func TestSaveNoHome(t *testing.T) {
+	original := userHomeDir
+	userHomeDir = func() (string, error) { return "", fmt.Errorf("no home") }
+	defer func() { userHomeDir = original }()
+
+	err := Save(Config{Host: "x", Port: 1})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if err.Error() != "cannot determine config path" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}
+
+func TestSaveMkdirError(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
+
+	// Create a file where the directory should be, causing MkdirAll to fail
+	configDir := filepath.Join(tmp, ".config", "itsyhome")
+	os.MkdirAll(filepath.Dir(configDir), 0755)
+	os.WriteFile(configDir, []byte("not a dir"), 0644)
+
+	err := Save(Config{Host: "x", Port: 1})
+	if err == nil {
+		t.Fatal("expected error from MkdirAll, got nil")
 	}
 }

@@ -1,5 +1,7 @@
 # itsyhome
 
+[![tests](https://github.com/nickustinov/itsyhome-cli/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-cli/actions/workflows/test.yml)
+
 A command-line tool to control your HomeKit devices through the [Itsyhome](https://github.com/nickustinov/itsyhome-macos) macOS app.
 
 ## Install

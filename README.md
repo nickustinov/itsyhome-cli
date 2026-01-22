@@ -42,6 +42,7 @@ itsyhome close Bedroom/Blinds
 
 ```bash
 itsyhome status                  # Home summary
+itsyhome status Office           # Device states for a room
 itsyhome list rooms              # List all rooms
 itsyhome list devices            # List all devices
 itsyhome list devices Office     # List devices in a room
@@ -49,6 +50,34 @@ itsyhome list scenes             # List all scenes
 itsyhome list groups             # List all groups
 itsyhome info Office/Lamp        # Device info with state
 itsyhome info Office             # All devices in a room
+```
+
+### Example output
+
+```
+$ itsyhome status Office
+Device         | State | Value
+---------------|-------|------
+Office AC      | on    | 22.5°
+Spotlights     | on    | 80%
+Blinds         | off   | —
+
+$ itsyhome list devices
+Device     | Type       | Room       | Status
+-----------|------------|------------|------
+Lamp       | light      | Office     | ok
+AC Unit    | thermostat | Bedroom    | ok
+Blinds     | blind      | Living Room| unreachable
+
+$ itsyhome info Office/Lamp
+Property   | Value
+-----------|------
+Name       | Lamp
+Type       | light
+Room       | Office
+Status     | reachable
+brightness | 80
+on         | true
 ```
 
 ### JSON output

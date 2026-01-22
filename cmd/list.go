@@ -6,6 +6,7 @@ import (
 
 	"github.com/nickustinov/itsyhome-cli/internal/client"
 	"github.com/nickustinov/itsyhome-cli/internal/config"
+	"github.com/nickustinov/itsyhome-cli/internal/display"
 	"github.com/spf13/cobra"
 )
 
@@ -30,9 +31,11 @@ var listRoomsCmd = &cobra.Command{
 			return nil
 		}
 
+		tbl := display.NewTable("Room")
 		for _, r := range rooms {
-			fmt.Println(r.Name)
+			tbl.AddRow(r.Name)
 		}
+		fmt.Print(tbl.Render())
 		return nil
 	},
 }
@@ -58,17 +61,15 @@ var listDevicesCmd = &cobra.Command{
 			return nil
 		}
 
+		tbl := display.NewTable("Device", "Type", "Room", "Status")
 		for _, d := range devices {
-			status := "+"
+			status := "ok"
 			if !d.Reachable {
-				status = "-"
+				status = "unreachable"
 			}
-			if d.Room != "" {
-				fmt.Printf("%s %s (%s) [%s]\n", status, d.Name, d.Type, d.Room)
-			} else {
-				fmt.Printf("%s %s (%s)\n", status, d.Name, d.Type)
-			}
+			tbl.AddRow(d.Name, d.Type, d.Room, status)
 		}
+		fmt.Print(tbl.Render())
 		return nil
 	},
 }
@@ -89,9 +90,11 @@ var listScenesCmd = &cobra.Command{
 			return nil
 		}
 
+		tbl := display.NewTable("Scene")
 		for _, s := range scenes {
-			fmt.Println(s.Name)
+			tbl.AddRow(s.Name)
 		}
+		fmt.Print(tbl.Render())
 		return nil
 	},
 }
@@ -112,9 +115,11 @@ var listGroupsCmd = &cobra.Command{
 			return nil
 		}
 
+		tbl := display.NewTable("Group", "Icon", "Devices")
 		for _, g := range groups {
-			fmt.Printf("%s %s (%d devices)\n", g.Icon, g.Name, g.Devices)
+			tbl.AddRow(g.Name, g.Icon, fmt.Sprintf("%d", g.Devices))
 		}
+		fmt.Print(tbl.Render())
 		return nil
 	},
 }

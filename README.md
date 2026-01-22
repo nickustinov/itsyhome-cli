@@ -28,14 +28,16 @@ itsyhome toggle Office/Spotlights
 itsyhome on Kitchen/Light
 itsyhome off Bedroom/Lamp
 itsyhome brightness 50 Office/Lamp
-itsyhome position 75 Living Room/Blinds
+itsyhome position 75 "Living Room/Blinds"
 itsyhome temp 22 Hallway/Thermostat
 itsyhome color FF6600 Bedroom/Light
 itsyhome scene Goodnight
-itsyhome lock Front Door
-itsyhome unlock Front Door
+itsyhome lock "Front Door"
+itsyhome unlock "Front Door"
 itsyhome open Garage/Door
 itsyhome close Bedroom/Blinds
+itsyhome toggle "group.All Lights"       # Control a group
+itsyhome off "group.Office Lights"
 ```
 
 ### Query commands
@@ -43,13 +45,15 @@ itsyhome close Bedroom/Blinds
 ```bash
 itsyhome status                  # Home summary
 itsyhome status Office           # Device states for a room
+itsyhome status "Living Room"    # Use quotes for spaces
 itsyhome list rooms              # List all rooms
 itsyhome list devices            # List all devices
 itsyhome list devices Office     # List devices in a room
 itsyhome list scenes             # List all scenes
 itsyhome list groups             # List all groups
 itsyhome info Office/Lamp        # Device info with state
-itsyhome info Office             # All devices in a room
+itsyhome info "Living Room"      # All devices in a room
+itsyhome info "group.All Lights" # Group info
 ```
 
 ### Example output

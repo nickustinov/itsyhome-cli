@@ -194,7 +194,7 @@ func (c *Client) GetInfo(target string) ([]DeviceInfo, error) {
 func (c *Client) get(path string) ([]byte, error) {
 	resp, err := c.httpClient.Get(c.baseURL + path)
 	if err != nil {
-		return nil, fmt.Errorf("connection failed: %w\nIs the Itsyhome app running with the server enabled?", err)
+		return nil, fmt.Errorf("connection failed: %w\nIs the Itsyhome app running with the server enabled?\nNote: webhook/CLI access requires an Itsyhome Pro subscription.", err)
 	}
 	defer resp.Body.Close()
 

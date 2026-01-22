@@ -8,6 +8,7 @@ import (
 
 	"github.com/nickustinov/itsyhome-cli/internal/client"
 	"github.com/nickustinov/itsyhome-cli/internal/config"
+	"github.com/nickustinov/itsyhome-cli/internal/display"
 	"github.com/spf13/cobra"
 )
 
@@ -29,35 +30,56 @@ var infoCmd = &cobra.Command{
 			return nil
 		}
 
-		for i, info := range infos {
-			if i > 0 {
-				fmt.Println()
-			}
-			fmt.Printf("Name: %s\n", info.Name)
-			fmt.Printf("Type: %s\n", info.Type)
-			if info.Room != "" {
-				fmt.Printf("Room: %s\n", info.Room)
-			}
-			if info.Reachable {
-				fmt.Println("Status: reachable")
-			} else {
-				fmt.Println("Status: unreachable")
-			}
-
-			if len(info.State) > 0 {
-				fmt.Println("State:")
-				keys := make([]string, 0, len(info.State))
-				for k := range info.State {
-					keys = append(keys, k)
-				}
-				sort.Strings(keys)
-				for _, k := range keys {
-					fmt.Printf("  %s: %v\n", k, info.State[k])
-				}
-			}
+		if len(infos) == 1 {
+			printSingleInfo(infos[0])
+		} else {
+			printMultiInfo(infos)
 		}
 		return nil
 	},
+}
+
+func printSingleInfo(info client.DeviceInfo) {
+	tbl := display.NewTable("Property", "Value")
+	tbl.AddRow("Name", info.Name)
+	tbl.AddRow("Type", info.Type)
+	if info.Room != "" {
+		tbl.AddRow("Room", info.Room)
+	}
+	if info.Reachable {
+		tbl.AddRow("Status", "reachable")
+	} else {
+		tbl.AddRow("Status", "unreachable")
+	}
+
+	if len(info.State) > 0 {
+		keys := make([]string, 0, len(info.State))
+		for k := range info.State {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			tbl.AddRow(k, fmt.Sprintf("%v", info.State[k]))
+		}
+	}
+	fmt.Print(tbl.Render())
+}
+
+func printMultiInfo(infos []client.DeviceInfo) {
+	tbl := display.NewTable("Device", "Type", "State", "Value")
+	for _, info := range infos {
+		state := "off"
+		if on, ok := info.State["on"]; ok {
+			if b, isBool := on.(bool); isBool && b {
+				state = "on"
+			}
+		}
+		if !info.Reachable {
+			state = "unreachable"
+		}
+		tbl.AddRow(info.Name, info.Type, state, formatValue(info))
+	}
+	fmt.Print(tbl.Render())
 }
 
 func init() {

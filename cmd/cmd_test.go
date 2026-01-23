@@ -78,10 +78,12 @@ func TestStatusCmd(t *testing.T) {
 			json.NewEncoder(w).Encode([]client.DeviceInfo{
 				{Name: "Desk Lamp", Type: "light", Reachable: true, State: map[string]interface{}{"on": true, "brightness": float64(80)}},
 				{Name: "AC Unit", Type: "thermostat", Reachable: true, State: map[string]interface{}{"on": true, "temperature": float64(22.5)}},
+				{Name: "Switch", Type: "switch", Reachable: true, State: map[string]interface{}{"on": true}},
 			})
 		case "/info/Bedroom":
 			json.NewEncoder(w).Encode([]client.DeviceInfo{
 				{Name: "Floor Lamp", Type: "light", Reachable: false, State: map[string]interface{}{}},
+				{Name: "Fan", Type: "fan", Reachable: true, State: map[string]interface{}{"on": false}},
 			})
 		}
 	})
@@ -137,6 +139,48 @@ func TestStatusCmdAllUnreachable(t *testing.T) {
 	_, err := executeCmd("status")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestStatusCmdListRoomsError(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/status":
+			json.NewEncoder(w).Encode(map[string]int{
+				"rooms": 1, "devices": 1, "accessories": 0,
+				"reachable": 1, "unreachable": 0, "scenes": 0, "groups": 0,
+			})
+		default:
+			w.WriteHeader(500)
+		}
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("status")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestStatusCmdGetInfoError(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/status":
+			json.NewEncoder(w).Encode(map[string]int{
+				"rooms": 1, "devices": 1, "accessories": 0,
+				"reachable": 1, "unreachable": 0, "scenes": 0, "groups": 0,
+			})
+		case "/list/rooms":
+			json.NewEncoder(w).Encode([]map[string]string{{"name": "Office"}})
+		default:
+			w.WriteHeader(500)
+		}
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("status")
+	if err == nil {
+		t.Fatal("expected error")
 	}
 }
 

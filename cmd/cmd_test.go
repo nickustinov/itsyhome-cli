@@ -186,10 +186,20 @@ func TestStatusCmdGetInfoError(t *testing.T) {
 
 func TestStatusCmdJSON(t *testing.T) {
 	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]int{
-			"rooms": 3, "devices": 10, "accessories": 5,
-			"reachable": 8, "unreachable": 2, "scenes": 4, "groups": 2,
-		})
+		switch r.URL.Path {
+		case "/status":
+			json.NewEncoder(w).Encode(map[string]int{
+				"rooms": 1, "devices": 2, "accessories": 2,
+				"reachable": 1, "unreachable": 1, "scenes": 0, "groups": 0,
+			})
+		case "/list/rooms":
+			json.NewEncoder(w).Encode([]map[string]string{{"name": "Office"}})
+		case "/info/Office":
+			json.NewEncoder(w).Encode([]client.DeviceInfo{
+				{Name: "Lamp", Type: "light", Reachable: true, State: map[string]interface{}{"on": true, "brightness": float64(80)}},
+				{Name: "Fan", Type: "fan", Reachable: false, State: map[string]interface{}{}},
+			})
+		}
 	})
 
 	jsonOutput = false

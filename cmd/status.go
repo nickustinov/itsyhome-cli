@@ -25,16 +25,29 @@ var statusCmd = &cobra.Command{
 	},
 }
 
+type statusDevice struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	State string `json:"state"`
+	Value string `json:"value,omitempty"`
+}
+
+type statusRoom struct {
+	Room    string         `json:"room"`
+	Devices []statusDevice `json:"devices"`
+}
+
+type statusOutput struct {
+	Rooms       int          `json:"rooms"`
+	Devices     int          `json:"devices"`
+	Unreachable int          `json:"unreachable"`
+	Details     []statusRoom `json:"details"`
+}
+
 func showHomeStatus(c *client.Client) error {
 	status, err := c.GetStatus()
 	if err != nil {
 		return err
-	}
-
-	if jsonOutput {
-		data, _ := json.MarshalIndent(status, "", "  ")
-		fmt.Println(string(data))
-		return nil
 	}
 
 	rooms, err := c.ListRooms()
@@ -42,13 +55,7 @@ func showHomeStatus(c *client.Client) error {
 		return err
 	}
 
-	type deviceEntry struct {
-		info  client.DeviceInfo
-		state string
-		value string
-	}
-
-	roomDevices := make([][]deviceEntry, len(rooms))
+	details := make([]statusRoom, len(rooms))
 	maxName, maxType := 0, 0
 
 	for i, room := range rooms {
@@ -56,7 +63,7 @@ func showHomeStatus(c *client.Client) error {
 		if err != nil {
 			return err
 		}
-		entries := make([]deviceEntry, len(infos))
+		devices := make([]statusDevice, len(infos))
 		for j, info := range infos {
 			state := deviceState(info)
 			value := ""
@@ -66,7 +73,7 @@ func showHomeStatus(c *client.Client) error {
 					value = v
 				}
 			}
-			entries[j] = deviceEntry{info: info, state: state, value: value}
+			devices[j] = statusDevice{Name: info.Name, Type: info.Type, State: state, Value: value}
 			if len(info.Name) > maxName {
 				maxName = len(info.Name)
 			}
@@ -74,7 +81,19 @@ func showHomeStatus(c *client.Client) error {
 				maxType = len(info.Type)
 			}
 		}
-		roomDevices[i] = entries
+		details[i] = statusRoom{Room: room.Name, Devices: devices}
+	}
+
+	if jsonOutput {
+		out := statusOutput{
+			Rooms:       status.Rooms,
+			Devices:     status.Devices,
+			Unreachable: status.Unreachable,
+			Details:     details,
+		}
+		data, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(data))
+		return nil
 	}
 
 	header := fmt.Sprintf("Home (%d rooms, %d devices, %d unreachable)",
@@ -82,14 +101,14 @@ func showHomeStatus(c *client.Client) error {
 
 	roomNodes := make([]display.TreeNode, len(rooms))
 	for i, room := range rooms {
-		deviceNodes := make([]display.TreeNode, len(roomDevices[i]))
-		for j, entry := range roomDevices[i] {
+		deviceNodes := make([]display.TreeNode, len(details[i].Devices))
+		for j, dev := range details[i].Devices {
 			label := fmt.Sprintf("%-*s  %-*s  %s",
-				maxName, entry.info.Name,
-				maxType, entry.info.Type,
-				entry.state)
-			if entry.value != "" {
-				label += "    " + entry.value
+				maxName, dev.Name,
+				maxType, dev.Type,
+				dev.State)
+			if dev.Value != "" {
+				label += "    " + dev.Value
 			}
 			deviceNodes[j] = display.TreeNode{Label: label}
 		}

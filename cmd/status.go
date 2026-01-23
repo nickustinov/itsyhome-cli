@@ -37,16 +37,80 @@ func showHomeStatus(c *client.Client) error {
 		return nil
 	}
 
-	tbl := display.NewTable("", "")
-	tbl.AddRow("Rooms", fmt.Sprintf("%d", status.Rooms))
-	tbl.AddRow("Devices", fmt.Sprintf("%d", status.Devices))
-	tbl.AddRow("Accessories", fmt.Sprintf("%d", status.Accessories))
-	tbl.AddRow("Reachable", fmt.Sprintf("%d", status.Reachable))
-	tbl.AddRow("Unreachable", fmt.Sprintf("%d", status.Unreachable))
-	tbl.AddRow("Scenes", fmt.Sprintf("%d", status.Scenes))
-	tbl.AddRow("Groups", fmt.Sprintf("%d", status.Groups))
-	fmt.Print(tbl.Render())
+	rooms, err := c.ListRooms()
+	if err != nil {
+		return err
+	}
+
+	type deviceEntry struct {
+		info  client.DeviceInfo
+		state string
+		value string
+	}
+
+	roomDevices := make([][]deviceEntry, len(rooms))
+	maxName, maxType := 0, 0
+
+	for i, room := range rooms {
+		infos, err := c.GetInfo(room.Name)
+		if err != nil {
+			return err
+		}
+		entries := make([]deviceEntry, len(infos))
+		for j, info := range infos {
+			state := deviceState(info)
+			value := ""
+			if state == "on" {
+				v := formatValue(info)
+				if v != "\u2014" {
+					value = v
+				}
+			}
+			entries[j] = deviceEntry{info: info, state: state, value: value}
+			if len(info.Name) > maxName {
+				maxName = len(info.Name)
+			}
+			if len(info.Type) > maxType {
+				maxType = len(info.Type)
+			}
+		}
+		roomDevices[i] = entries
+	}
+
+	header := fmt.Sprintf("Home (%d rooms, %d devices, %d unreachable)",
+		status.Rooms, status.Devices, status.Unreachable)
+
+	roomNodes := make([]display.TreeNode, len(rooms))
+	for i, room := range rooms {
+		deviceNodes := make([]display.TreeNode, len(roomDevices[i]))
+		for j, entry := range roomDevices[i] {
+			label := fmt.Sprintf("%-*s  %-*s  %s",
+				maxName, entry.info.Name,
+				maxType, entry.info.Type,
+				entry.state)
+			if entry.value != "" {
+				label += "    " + entry.value
+			}
+			deviceNodes[j] = display.TreeNode{Label: label}
+		}
+		roomNodes[i] = display.TreeNode{Label: room.Name, Children: deviceNodes}
+	}
+
+	tree := &display.Tree{Root: display.TreeNode{Label: header, Children: roomNodes}}
+	fmt.Print(tree.Render())
 	return nil
+}
+
+func deviceState(info client.DeviceInfo) string {
+	if !info.Reachable {
+		return "unreachable"
+	}
+	if on, ok := info.State["on"]; ok {
+		if b, isBool := on.(bool); isBool && b {
+			return "on"
+		}
+	}
+	return "off"
 }
 
 func showRoomStatus(c *client.Client, target string) error {

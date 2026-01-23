@@ -63,10 +63,72 @@ func executeCmd(args ...string) (string, error) {
 
 func TestStatusCmd(t *testing.T) {
 	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/status" {
+		switch r.URL.Path {
+		case "/status":
 			json.NewEncoder(w).Encode(map[string]int{
-				"rooms": 3, "devices": 10, "accessories": 5,
-				"reachable": 8, "unreachable": 2, "scenes": 4, "groups": 2,
+				"rooms": 2, "devices": 3, "accessories": 5,
+				"reachable": 2, "unreachable": 1, "scenes": 4, "groups": 2,
+			})
+		case "/list/rooms":
+			json.NewEncoder(w).Encode([]map[string]string{
+				{"name": "Office"},
+				{"name": "Bedroom"},
+			})
+		case "/info/Office":
+			json.NewEncoder(w).Encode([]client.DeviceInfo{
+				{Name: "Desk Lamp", Type: "light", Reachable: true, State: map[string]interface{}{"on": true, "brightness": float64(80)}},
+				{Name: "AC Unit", Type: "thermostat", Reachable: true, State: map[string]interface{}{"on": true, "temperature": float64(22.5)}},
+			})
+		case "/info/Bedroom":
+			json.NewEncoder(w).Encode([]client.DeviceInfo{
+				{Name: "Floor Lamp", Type: "light", Reachable: false, State: map[string]interface{}{}},
+			})
+		}
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("status")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestStatusCmdEmptyRoom(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/status":
+			json.NewEncoder(w).Encode(map[string]int{
+				"rooms": 1, "devices": 0, "accessories": 0,
+				"reachable": 0, "unreachable": 0, "scenes": 0, "groups": 0,
+			})
+		case "/list/rooms":
+			json.NewEncoder(w).Encode([]map[string]string{{"name": "Empty Room"}})
+		case "/info/Empty Room":
+			json.NewEncoder(w).Encode([]client.DeviceInfo{})
+		}
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("status")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestStatusCmdAllUnreachable(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/status":
+			json.NewEncoder(w).Encode(map[string]int{
+				"rooms": 1, "devices": 2, "accessories": 0,
+				"reachable": 0, "unreachable": 2, "scenes": 0, "groups": 0,
+			})
+		case "/list/rooms":
+			json.NewEncoder(w).Encode([]map[string]string{{"name": "Office"}})
+		case "/info/Office":
+			json.NewEncoder(w).Encode([]client.DeviceInfo{
+				{Name: "Lamp", Type: "light", Reachable: false, State: map[string]interface{}{}},
+				{Name: "Fan", Type: "fan", Reachable: false, State: map[string]interface{}{}},
 			})
 		}
 	})

@@ -7,15 +7,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Version = "dev"
+
 var (
 	jsonOutput bool
 	osExit     = os.Exit
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "itsyhome",
-	Short: "Control your HomeKit devices via Itsyhome",
-	Long:  "A CLI tool to control HomeKit devices through the Itsyhome macOS app.",
+	Use:     "itsyhome",
+	Short:   "Control your HomeKit devices via Itsyhome",
+	Long:    "A CLI tool to control HomeKit devices through the Itsyhome macOS app.",
+	Version: Version,
 }
 
 func Execute() {

@@ -768,6 +768,14 @@ func TestRootCmdHelp(t *testing.T) {
 	}
 }
 
+func TestRootCmdVersion(t *testing.T) {
+	jsonOutput = false
+	_, err := executeCmd("--version")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRootCmdUnknown(t *testing.T) {
 	jsonOutput = false
 	_, err := executeCmd("nonexistent")

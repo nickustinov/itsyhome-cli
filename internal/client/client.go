@@ -50,6 +50,7 @@ type Group struct {
 	Name    string `json:"name"`
 	Icon    string `json:"icon"`
 	Devices int    `json:"devices"`
+	Room    string `json:"room,omitempty"`
 }
 
 type DeviceInfo struct {

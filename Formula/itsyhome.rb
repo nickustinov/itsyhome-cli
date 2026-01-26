@@ -1,7 +1,7 @@
 class Itsyhome < Formula
   desc "CLI tool to control HomeKit devices via Itsyhome"
   homepage "https://github.com/nickustinov/itsyhome-cli"
-  url "https://github.com/nickustinov/itsyhome-cli/archive/refs/tags/v0.1.0.tar.gz"
+  url "https://github.com/nickustinov/itsyhome-cli/archive/refs/tags/v0.3.0.tar.gz"
   sha256 ""
   license "MIT"
 

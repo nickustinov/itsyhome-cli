@@ -38,7 +38,8 @@ itsyhome lock "Front Door"
 itsyhome unlock "Front Door"
 itsyhome open Garage/Door
 itsyhome close Bedroom/Blinds
-itsyhome toggle "group.All Lights"       # Control a group
+itsyhome toggle "group.All Lights"            # Control a global group
+itsyhome toggle "Office/group.All Lights"    # Control a room-scoped group
 itsyhome off "group.Office Lights"
 ```
 
@@ -55,7 +56,8 @@ itsyhome list scenes             # List all scenes
 itsyhome list groups             # List all groups
 itsyhome info Office/Lamp        # Device info with state
 itsyhome info "Living Room"      # All devices in a room
-itsyhome info "group.All Lights" # Group info
+itsyhome info "group.All Lights"         # Global group info
+itsyhome info "Office/group.All Lights" # Room-scoped group info
 ```
 
 ### Example output
@@ -123,7 +125,8 @@ itsyhome completion fish > ~/.config/fish/completions/itsyhome.fish
 | `Room/Device` | `Office/Spotlights` | Device in a specific room |
 | `Device` | `Lamp` | Device by name (if unique) |
 | `Room` | `Office` | All devices in room (for info) |
-| `group.Name` | `group.Office Lights` | All devices in a group |
+| `Room/group.Name` | `Office/group.All Lights` | Group scoped to a room |
+| `group.Name` | `group.Office Lights` | Global group |
 | `scene.Name` | `scene.Goodnight` | Scene by name |
 
 ## API reference
@@ -161,7 +164,8 @@ GET /<action>/<value>/<target>
 | `/list/devices` | `[{"name":"Lamp","type":"light","room":"Office","reachable":true}]` |
 | `/list/devices/<room>` | Devices filtered by room |
 | `/list/scenes` | `[{"name":"Goodnight"}]` |
-| `/list/groups` | `[{"name":"All Lights","icon":"💡","devices":5}]` |
+| `/list/groups` | `[{"name":"All Lights","icon":"lightbulb","devices":5,"room":"Office"}]` |
+| `/list/groups/<room>` | Groups available in room (room-scoped + global) |
 | `/info/<target>` | `{"name":"Lamp","type":"light","room":"Office","reachable":true,"state":{"on":true,"brightness":80}}` |
 
 ### Response format

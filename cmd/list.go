@@ -115,9 +115,13 @@ var listGroupsCmd = &cobra.Command{
 			return nil
 		}
 
-		tbl := display.NewTable("Group", "Icon", "Devices")
+		tbl := display.NewTable("Group", "Room", "Icon", "Devices")
 		for _, g := range groups {
-			tbl.AddRow(g.Name, g.Icon, fmt.Sprintf("%d", g.Devices))
+			room := g.Room
+			if room == "" {
+				room = "(global)"
+			}
+			tbl.AddRow(g.Name, room, g.Icon, fmt.Sprintf("%d", g.Devices))
 		}
 		fmt.Print(tbl.Render())
 		return nil

@@ -241,6 +241,30 @@ func TestListGroups(t *testing.T) {
 	}
 }
 
+func TestListGroupsWithRoom(t *testing.T) {
+	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode([]Group{
+			{Name: "All Lights", Icon: "lightbulb", Devices: 3, Room: "Office"},
+			{Name: "Global Lights", Icon: "lightbulb", Devices: 5, Room: ""},
+		})
+	})
+	defer srv.Close()
+
+	groups, err := c.ListGroups()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(groups) != 2 {
+		t.Fatalf("expected 2 groups, got %d", len(groups))
+	}
+	if groups[0].Room != "Office" {
+		t.Errorf("expected room 'Office', got '%s'", groups[0].Room)
+	}
+	if groups[1].Room != "" {
+		t.Errorf("expected empty room for global group, got '%s'", groups[1].Room)
+	}
+}
+
 func TestListGroupsInvalidJSON(t *testing.T) {
 	srv, c := testServer(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("not json"))

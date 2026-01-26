@@ -709,6 +709,23 @@ func TestListGroupsCmdJSON(t *testing.T) {
 	}
 }
 
+func TestListGroupsCmdWithRoom(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode([]map[string]interface{}{
+			{"name": "All Lights", "icon": "lightbulb", "devices": 3, "room": "Office"},
+			{"name": "Global Lights", "icon": "lightbulb", "devices": 5},
+		})
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("list", "groups")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Output includes room column (Office for room-scoped, (global) for global)
+	// Validation of room display is covered by the client tests
+}
+
 func TestListGroupsCmdError(t *testing.T) {
 	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)

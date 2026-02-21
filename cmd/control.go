@@ -66,6 +66,7 @@ func init() {
 
 	rootCmd.AddCommand(makeValueControlCmd("brightness", "Set brightness (0-100)", "value"))
 	rootCmd.AddCommand(makeValueControlCmd("position", "Set position (0-100)", "value"))
+	rootCmd.AddCommand(makeValueControlCmd("speed", "Set fan speed (0-100)", "value"))
 	rootCmd.AddCommand(makeValueControlCmd("temp", "Set color temperature (140-500 mireds)", "value"))
 	rootCmd.AddCommand(makeValueControlCmd("color", "Set color (hex)", "hex"))
 }

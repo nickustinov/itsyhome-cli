@@ -468,6 +468,21 @@ func TestBrightnessCmd(t *testing.T) {
 	}
 }
 
+func TestSpeedCmd(t *testing.T) {
+	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/speed/80/Bedroom Fan" {
+			t.Fatalf("expected /speed/80/Bedroom Fan, got %s", r.URL.Path)
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	})
+
+	jsonOutput = false
+	_, err := executeCmd("speed", "80", "Bedroom", "Fan")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestSceneCmd(t *testing.T) {
 	setupTestEnv(t, func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})

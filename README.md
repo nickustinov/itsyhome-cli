@@ -31,6 +31,7 @@ itsyhome on Kitchen/Light
 itsyhome off Bedroom/Lamp
 itsyhome brightness 50 Office/Lamp
 itsyhome position 75 "Living Room/Blinds"
+itsyhome speed 50 Bedroom/Ceiling Fan
 itsyhome temp 22 Hallway/Thermostat
 itsyhome color FF6600 Bedroom/Light
 itsyhome scene Goodnight
@@ -147,6 +148,7 @@ GET /<action>/<value>/<target>
 | `off` | `/off/<target>` | `/off/Bedroom/Lamp` |
 | `brightness` | `/brightness/<0-100>/<target>` | `/brightness/50/Office/Lamp` |
 | `position` | `/position/<0-100>/<target>` | `/position/75/Living%20Room/Blinds` |
+| `speed` | `/speed/<0-100>/<target>` | `/speed/50/Bedroom/Ceiling%20Fan` |
 | `temp` | `/temp/<mireds>/<target>` | `/temp/300/Office/Lamp` |
 | `color` | `/color/<hex>/<target>` | `/color/FF6600/Bedroom/Light` |
 | `scene` | `/scene/<name>` | `/scene/Goodnight` |
